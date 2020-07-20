@@ -2,6 +2,9 @@
 
 public class PlayerController : MonoBehaviour
 {
+    public LayerMask groundLayer;
+    public Transform groundCheck;
+
     private Rigidbody2D myRigidbody;
     private SpriteRenderer myRenderer;
     private Animator myAnimator;
@@ -9,13 +12,6 @@ public class PlayerController : MonoBehaviour
     private bool canMove = true;
     private bool facingRight = true;
     private float groundCheckRadius = 0.2f;
-    private float horizontalDirection = 0.0f;
-    private bool jumpPressed = false;
-
-    public LayerMask groundLayer;
-    public Transform groundCheck;
-    public float jumpPower;
-    public float maxSpeed;
 
 
     void Start()
@@ -26,20 +22,9 @@ public class PlayerController : MonoBehaviour
         myAnimator.SetBool("canMove", canMove);
     }
 
-    void Update()
+    void FixedUpdate()
     {
-        ReadInput();
         CheckGrounded();
-
-        if (canMove)
-        {
-            if (grounded && jumpPressed)
-            {
-                jump();
-            }
-
-            Move();  
-        }
     }
 
     private void Flip()
@@ -48,19 +33,27 @@ public class PlayerController : MonoBehaviour
         myRenderer.flipX = !myRenderer.flipX;
     }
 
-    private void jump()
+    public  void Jump(float jumpPower)
     {
-        myAnimator.SetBool("isGrounded", false);
-        myRigidbody.velocity = new Vector2(myRigidbody.velocity.x, 0f);
-        myRigidbody.AddForce(new Vector2(0f, jumpPower), ForceMode2D.Impulse);
-        grounded = false;
+        if (grounded && canMove)
+        {
+            myAnimator.SetBool("isGrounded", false);
+            myRigidbody.velocity = new Vector2(myRigidbody.velocity.x, 0f);
+            myRigidbody.AddForce(new Vector2(0f, jumpPower), ForceMode2D.Impulse);
+            grounded = false;
+        }
+        
     }
 
-    private void Move()
+    public void HorizontalMove(float horizontalVelcoity)
     {
-        TurnToDirection();
-        myRigidbody.velocity = new Vector2(horizontalDirection * maxSpeed, myRigidbody.velocity.y);
-        myAnimator.SetFloat("MoveSpeed", Mathf.Abs(horizontalDirection * maxSpeed));
+        if(canMove)
+        {
+            TurnToDirection(horizontalVelcoity);
+            myRigidbody.velocity = new Vector2(horizontalVelcoity, myRigidbody.velocity.y);
+            myAnimator.SetFloat("MoveSpeed", Mathf.Abs(horizontalVelcoity));
+        }
+        
     }
 
     private void CheckGrounded()
@@ -69,34 +62,19 @@ public class PlayerController : MonoBehaviour
         myAnimator.SetBool("isGrounded", grounded);
     }
 
-    private void TurnToDirection()
+    private void TurnToDirection(float horizontalVelcoity)
     {
-        if (horizontalDirection > 0 && !facingRight)
+        if (horizontalVelcoity > 0 && !facingRight)
         {
             Flip();
         }
-        else if (horizontalDirection < 0 && facingRight)
+        else if (horizontalVelcoity < 0 && facingRight)
         {
             Flip();
         }
     }
 
-    private void ReadInput()
-    {
-        horizontalDirection = Input.GetAxis("Horizontal");
-
-        if (Input.GetAxis("Jump") > 0)
-        {
-            jumpPressed = true;
-        }
-        else
-        {
-            jumpPressed = false;
-        }
-
-    }
-
-    public void toogleCanMove()
+    public void ToogleCanMove()
     {
         canMove = !canMove;
         myAnimator.SetBool("canMove", canMove);
